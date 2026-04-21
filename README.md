@@ -13,7 +13,15 @@ Rather than analyzing GFBG as a traditional bank, this study approaches it as a 
 - Capital ratio: 27.2%  
 - Total assets: ~$21B  
 - AUM growth: +20.9%  
+## Investment Thesis
 
+Grupo Financiero BG is evolving from a traditional banking model toward a capital allocation and asset management platform, supported by strong profitability (ROAE >20%) and accelerating AUM growth.
+
+## Recommendation
+
+HOLD / BUY (based on risk appetite)
+
+The bank shows strong fundamentals, but monitoring asset quality and sustainability of growth is key.
 ## Key Observation
 
 AUM is growing faster than the loan book, suggesting a structural shift toward an asset management-driven model.

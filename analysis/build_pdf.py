@@ -10,7 +10,7 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 import datetime, os
 
 # ── Paths ────────────────────────────────────────────────────────────────────
-OUT  = "outputs/gfbg_equity_research_v2.pdf"
+OUT  = "outputs/gfbg_equity_research_v3.pdf"
 IMGS = "outputs"
 W, H = A4
 
@@ -221,16 +221,18 @@ story += [
 story += section("01  /  INVESTMENT THESIS", "Why GFBG stands out")
 
 thesis = [
-    ("A bank becoming an asset manager",
-     "AUM grew +37% in two years and is nearly the size of the entire balance sheet. "
-     "This shift brings higher margins, less credit risk, and more predictable revenue — "
-     "a business model closer to a wealth manager than a traditional bank."),
-    ("Profitability that holds — year after year",
-     "ROE above 20% for three straight years. A cost-to-income ratio of 28.1% is among "
-     "the best in the region. This is not a one-time result — it is structural."),
-    ("Strong capital with room to grow",
-     "Capital ratio of 27.2% — well above what regulators require. "
-     "The bank can grow, acquire, or return capital to shareholders without strain."),
+    ("A bank transitioning into an asset manager",
+     "AUM grew +37% over two years and now represents 94% of the balance sheet. "
+     "The revenue mix is shifting toward capital-light fee income — "
+     "structurally higher margins, lower credit risk, more predictable earnings."),
+    ("Best-in-class profitability — structural, not cyclical",
+     "ROE above 20% for three consecutive years, driven by a 28.1% cost-to-income ratio. "
+     "That efficiency level is elite by any regional benchmark. "
+     "It reflects operating leverage built into the model — not a one-year event."),
+    ("Excess capital. Real optionality.",
+     "Capital ratio of 27.2% — well above regulatory requirements. "
+     "Management can grow organically, pursue acquisitions, or return capital. "
+     "Each is accretive to shareholders at current valuations."),
 ]
 for h, b in thesis:
     story += [Paragraph(f"‣  {h}", b_head), Paragraph(b, b_body)]
@@ -240,8 +242,8 @@ story += [
     *section("02  /  KEY CHARTS", "The story in numbers"),
     chart("07_aum_vs_loans_vs_assets.png", w=15.5*cm, h=8.8*cm),
     Paragraph(
-        "Managed money (AUM) is growing 3x faster than loans. "
-        "By 2025, AUM nearly equals the bank's total assets — a structural shift in the business.",
+        "AUM grows 3x faster than loans. By 2025, managed assets nearly equal the entire balance sheet. "
+        "The business model has fundamentally shifted.",
         caption),
     PageBreak(),
 ]
@@ -279,18 +281,18 @@ story += [
 story += section("03  /  KEY INSIGHTS", "What the numbers tell us")
 
 insights = [
-    ("AUM is approaching the size of the whole bank",
-     "At $19.9B, managed assets are now 94% of total assets. "
-     "In 2023 that number was 76%. The shift is fast and consistent."),
-    ("ROE above 20% — three years in a row",
-     "Most banks globally earn 10-12% ROE. GFBG earns double. "
-     "That gap reflects a better business mix and tighter cost control."),
-    ("The bank is lending less relative to deposits",
-     "Loan-to-deposit ratio fell from 95% to 91%. "
-     "Less reliance on credit means lower risk and more room for fee income."),
-    ("Capital buffer is very strong",
-     "At 27.2%, the capital ratio gives the bank flexibility to invest, "
-     "expand, or absorb shocks — without needing to raise money from investors."),
+    ("AUM now equals 94% of the balance sheet",
+     "Up from 76% in 2023. The pace of shift is accelerating — "
+     "driven by higher-margin fee income replacing spread-dependent lending revenue."),
+    ("ROE above 20% — three consecutive years",
+     "Global banking peers average 10-12%. GFBG earns double. "
+     "The gap is structural: elite cost control and a capital-light revenue mix."),
+    ("Loan-to-Deposit ratio declining: 95% to 91%",
+     "Less reliance on credit. More room for fee-based income. "
+     "This shift lowers earnings volatility and improves the quality of revenue."),
+    ("Capital ratio of 27.2% — real strategic flexibility",
+     "No need to raise equity to fund growth. "
+     "The bank can invest, acquire, or return capital — from existing resources."),
 ]
 for h, b in insights:
     story += [Paragraph(f"‣  {h}", b_head), Paragraph(b, b_body)]
@@ -299,15 +301,16 @@ story += [
     Spacer(1, 0.2*cm), divider(),
     *section("04  /  VALUATION", "Is the stock cheap or expensive?"),
     Paragraph(
-        "Based on publicly available data and regional comparables, GFBG trades at a modest premium to peers. "
-        "Given its superior ROE and AUM growth, that premium is justified.",
+        "GFBG trades at a premium to regional peers. That premium is justified "
+        "by structurally higher ROE and fee-based growth. Based on regional comparables:",
         S("vb", size=9.5, color=GRAY, leading=15, after=10)),
     valuation_table(),
     Spacer(1, 0.3*cm),
     Paragraph(
-        "A P/B of ~2.2x is above the regional average, but GFBG's ROE is also nearly double the peer median. "
-        "High-ROE banks historically command a premium. At current levels, the valuation reflects quality — "
-        "not speculation.",
+        "A P/B of ~2.2x sits above the peer range — but GFBG's ROE is nearly double the median. "
+        "High-ROE franchises historically command a durable premium. "
+        "If ROE remains above 20%, current multiples are sustainable. "
+        "Downside risk is limited to a structural deterioration in AUM growth or margins.",
         S("vi", font="Helvetica-Oblique", size=9, color=GRAY, leading=14, after=0, left=8)),
     Spacer(1, 0.3*cm),
     divider(),
@@ -318,18 +321,20 @@ story += [
 story += section("05  /  CATALYSTS", "What could drive the stock higher")
 
 catalysts = [
-    ("AUM growth accelerates fee income",
-     "Each dollar of new AUM generates management fees with no credit risk attached. "
-     "As AUM approaches and exceeds the loan book, fee income becomes the dominant revenue driver."),
-    ("Business mix shift improves margins",
-     "Moving from interest income (spread-dependent) to fee income (volume-dependent) "
-     "structurally improves net margins and reduces sensitivity to interest rate cycles."),
-    ("Expansion of wealth management services",
-     "GFBG has the client base and brand to deepen penetration in private banking and "
-     "family office services — both high-margin segments with strong regional demand."),
-    ("Capital deployment: M&A or regional expansion",
-     "With a 27.2% capital ratio, the bank has dry powder. A strategic acquisition or "
-     "geographic expansion into neighboring markets would accelerate growth without dilution."),
+    ("Continued AUM growth expands fee income",
+     "Reducing earnings volatility and supporting multiple expansion. "
+     "As fee income displaces interest income, the revenue profile becomes more predictable "
+     "and deserves a higher valuation multiple."),
+    ("Revenue mix shift structurally lifts margins",
+     "Fee income carries no credit risk and scales with AUM — not with balance sheet size. "
+     "Each percentage point shift in the mix improves ROE without additional capital deployment."),
+    ("Wealth management penetration — underpenetrated market",
+     "Private banking and family office services remain underpenetrated in Panama. "
+     "GFBG's existing client base and regional brand create a low-cost path to capturing that demand."),
+    ("Capital deployment: M&amp;A or geographic expansion",
+     "A 27.2% capital ratio implies meaningful excess capital. "
+     "A targeted acquisition or regional expansion would accelerate earnings growth "
+     "without equity dilution at current valuations."),
 ]
 for h, b in catalysts:
     story += [Paragraph(f"+ {h}", cat_h), Paragraph(b, cat_b)]
@@ -340,15 +345,15 @@ story += [
 ]
 
 risks = [
-    ("NPL coverage is declining  (152.6% -> 124.3%)",
-     "The bank is setting aside less money to cover potential loan losses. "
-     "Not a problem today, but worth monitoring. A drop below 100% would be a red flag."),
-    ("AUM growth may slow",
-     "Growing AUM at +20.9% per year is hard to sustain indefinitely. "
-     "If growth slows significantly, fee revenue projections come down and the stock re-rates."),
-    ("Panama concentration risk",
-     "Almost all revenue comes from Panama. A local recession, political instability, "
-     "or regulatory change would hit the bank directly with no geographic buffer."),
+    ("NPL coverage declining: 152.6% to 124.3%",
+     "Reserve levels are falling relative to non-performing loans. "
+     "Not yet a concern — but a drop below 100% would signal a material deterioration in asset quality."),
+    ("Sustained 20%+ AUM growth is unlikely long-term",
+     "Slowing AUM growth compresses fee revenue and removes the primary re-rating catalyst. "
+     "A normalization to 10-12% growth would pressure multiples."),
+    ("Single-country exposure: Panama",
+     "No geographic diversification. Fiscal deterioration, sovereign downgrade, "
+     "or regulatory tightening flows directly into earnings with no external buffer."),
 ]
 for h, b in risks:
     story += [Paragraph(f"! {h}", risk_h), Paragraph(b, risk_b)]
@@ -370,13 +375,14 @@ story.append(r_box)
 story += [
     Spacer(1, 0.5*cm),
     Paragraph(
-        "GFBG is one of the most profitable banks in the region — and it is actively transforming "
-        "into something more valuable: an asset management platform with a banking license. "
-        "With ROE above 20%, AUM growing at nearly 21% per year, and a capital ratio that provides "
-        "real strategic flexibility, the risk/reward profile is compelling. "
-        "We see the primary drivers over a 2-3 year horizon as continued AUM expansion, "
-        "margin improvement from the fee/spread revenue mix shift, and disciplined capital deployment. "
-        "Maintain OUTPERFORM.",
+        "GFBG combines top-tier profitability with a structural shift toward asset management — "
+        "a rare combination in regional banking. "
+        "ROE above 20% is sustained. AUM is growing at nearly 21% per year. "
+        "Capital is abundant. The business is becoming less capital-intensive and more profitable over time. "
+        "Over a 2-3 year horizon, the primary return drivers are AUM expansion, "
+        "margin improvement from the fee/spread mix shift, and disciplined capital deployment. "
+        "Risk/reward is asymmetric to the upside. "
+        "We maintain OUTPERFORM.",
         concl_s),
     Spacer(1, 1*cm),
     HRFlowable(width="35%", thickness=0.8, color=GOLD, spaceAfter=8),

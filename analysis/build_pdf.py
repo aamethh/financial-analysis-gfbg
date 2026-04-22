@@ -3,314 +3,388 @@ from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Image,
-    HRFlowable, PageBreak, Table, TableStyle
+    HRFlowable, PageBreak, Table, TableStyle, KeepTogether
 )
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
-from reportlab.platypus import KeepTogether
 import datetime, os
 
 # ── Paths ────────────────────────────────────────────────────────────────────
-OUT   = "outputs/gfbg_equity_research.pdf"
-IMGS  = "outputs"
-W, H  = A4
+OUT  = "outputs/gfbg_equity_research_v2.pdf"
+IMGS = "outputs"
+W, H = A4
 
-# ── Color palette ────────────────────────────────────────────────────────────
-NAVY     = colors.HexColor("#1B3A6B")
-GOLD     = colors.HexColor("#C8972B")
-TEAL     = colors.HexColor("#2E7D9A")
-DARK     = colors.HexColor("#1F2937")
-GRAY     = colors.HexColor("#6B7280")
-LGRAY    = colors.HexColor("#F3F4F6")
-WHITE    = colors.white
-RED_SOFT = colors.HexColor("#DC2626")
-
-# ── Styles ───────────────────────────────────────────────────────────────────
-def S(name, **kw):
-    base = {
-        "fontName":   kw.pop("font", "Helvetica"),
-        "fontSize":   kw.pop("size", 10),
-        "textColor":  kw.pop("color", DARK),
-        "leading":    kw.pop("leading", 14),
-        "spaceAfter": kw.pop("after", 0),
-        "spaceBefore":kw.pop("before", 0),
-        "alignment":  kw.pop("align", TA_LEFT),
-    }
-    base.update(kw)
-    return ParagraphStyle(name, **base)
-
-cover_tag   = S("ct", font="Helvetica",      size=10,  color=GOLD,  align=TA_LEFT, after=4)
-cover_title = S("ch", font="Helvetica-Bold", size=28,  color=WHITE, align=TA_LEFT, leading=34, after=6)
-cover_sub   = S("cs", font="Helvetica",      size=12,  color=colors.HexColor("#CBD5E1"), align=TA_LEFT, after=4)
-cover_meta  = S("cm", font="Helvetica",      size=9,   color=colors.HexColor("#94A3B8"), align=TA_LEFT)
-
-sec_label   = S("sl", font="Helvetica-Bold", size=7,   color=GOLD,   after=4,  spaceBefore=2, letterSpacing=1.5)
-sec_title   = S("st", font="Helvetica-Bold", size=18,  color=NAVY,   after=6,  leading=22)
-body        = S("b",  font="Helvetica",      size=10,  color=DARK,   leading=16, after=4)
-bullet_head = S("bh", font="Helvetica-Bold", size=11,  color=NAVY,   leading=15, after=2, leftIndent=12)
-bullet_body = S("bb", font="Helvetica",      size=9.5, color=GRAY,   leading=14, after=10, leftIndent=24)
-caption     = S("cap",font="Helvetica-Oblique", size=8.5, color=GRAY, after=14, align=TA_CENTER)
-rating_txt  = S("rt", font="Helvetica-Bold", size=22,  color=TEAL,   align=TA_CENTER, after=4)
-concl_body  = S("cb", font="Helvetica",      size=10.5,color=DARK,   leading=17, after=6, align=TA_CENTER)
-risk_head   = S("rh", font="Helvetica-Bold", size=10,  color=RED_SOFT, after=2, leftIndent=12)
-risk_body   = S("rb", font="Helvetica",      size=9.5, color=GRAY,   leading=14, after=10, leftIndent=24)
-footer_s    = S("ft", font="Helvetica",      size=7.5, color=GRAY,   align=TA_CENTER)
+# ── Palette ──────────────────────────────────────────────────────────────────
+NAVY      = colors.HexColor("#1B3A6B")
+NAVY_DARK = colors.HexColor("#0F2347")
+GOLD      = colors.HexColor("#C8972B")
+GOLD_LIGHT= colors.HexColor("#FDF3E3")
+TEAL      = colors.HexColor("#2E7D9A")
+TEAL_LIGHT= colors.HexColor("#EBF6FA")
+DARK      = colors.HexColor("#1F2937")
+GRAY      = colors.HexColor("#6B7280")
+LGRAY     = colors.HexColor("#F9FAFB")
+MID_GRAY  = colors.HexColor("#E5E7EB")
+RED       = colors.HexColor("#DC2626")
+GREEN     = colors.HexColor("#16A34A")
+WHITE     = colors.white
 
 DATE = datetime.date.today().strftime("%B %d, %Y")
 
-# ── Cover page builder ───────────────────────────────────────────────────────
-def cover_background(canvas, doc):
+# ── Style factory ─────────────────────────────────────────────────────────────
+def S(name, font="Helvetica", size=10, color=None, leading=None,
+      after=0, before=0, align=TA_LEFT, left=0, **kw):
+    return ParagraphStyle(
+        name,
+        fontName=font, fontSize=size,
+        textColor=color or DARK,
+        leading=leading or size * 1.4,
+        spaceAfter=after, spaceBefore=before,
+        alignment=align, leftIndent=left,
+        **kw
+    )
+
+# Cover
+cov_tag   = S("ct", size=9,  color=GOLD,  after=6)
+cov_title = S("ch", font="Helvetica-Bold", size=30, color=WHITE, leading=36, after=8)
+cov_sub   = S("cs", size=12, color=colors.HexColor("#CBD5E1"), after=6)
+cov_meta  = S("cm", size=9,  color=colors.HexColor("#94A3B8"), after=3)
+
+# Section headers
+sec_lbl  = S("sl", font="Helvetica-Bold", size=7,  color=GOLD,  after=4, before=2)
+sec_ttl  = S("st", font="Helvetica-Bold", size=17, color=NAVY,  after=4, leading=21)
+
+# Body
+body     = S("body", size=10, color=DARK, leading=16, after=4)
+b_head   = S("bh", font="Helvetica-Bold", size=10.5, color=NAVY,  after=2, left=10)
+b_body   = S("bb", size=9.5,  color=GRAY,  leading=15, after=9,  left=22)
+caption  = S("cap", font="Helvetica-Oblique", size=8.5, color=GRAY, after=12, align=TA_CENTER)
+risk_h   = S("rh", font="Helvetica-Bold", size=10,  color=RED,   after=2,  left=10)
+risk_b   = S("rb", size=9.5,  color=GRAY,  leading=15, after=9,  left=22)
+cat_h    = S("cah", font="Helvetica-Bold", size=10.5, color=TEAL, after=2, left=10)
+cat_b    = S("cab", size=9.5, color=GRAY, leading=15, after=9, left=22)
+val_cell = S("vc", font="Helvetica-Bold", size=10, color=NAVY, align=TA_CENTER, after=0)
+val_sub  = S("vs", size=8.5, color=GRAY, align=TA_CENTER, after=0)
+rating_s = S("rat", font="Helvetica-Bold", size=20, color=TEAL, align=TA_CENTER, after=4)
+concl_s  = S("con", size=10.5, color=DARK, leading=17, after=6, align=TA_CENTER)
+foot_s   = S("ft", size=7.5, color=GRAY, align=TA_CENTER)
+snap_lbl = S("snl", size=8,  color=GRAY,  align=TA_CENTER, after=0)
+snap_val = S("snv", font="Helvetica-Bold", size=13, color=NAVY, align=TA_CENTER, after=0)
+
+# ── Page backgrounds ─────────────────────────────────────────────────────────
+def cover_bg(canvas, doc):
     canvas.saveState()
-    # Full navy background
     canvas.setFillColor(NAVY)
     canvas.rect(0, 0, W, H, fill=1, stroke=0)
-    # Gold accent bar (left edge)
     canvas.setFillColor(GOLD)
     canvas.rect(0, 0, 0.45*cm, H, fill=1, stroke=0)
-    # Bottom strip
-    canvas.setFillColor(colors.HexColor("#0F2347"))
-    canvas.rect(0, 0, W, 3.2*cm, fill=1, stroke=0)
+    canvas.setFillColor(NAVY_DARK)
+    canvas.rect(0, 0, W, 3*cm, fill=1, stroke=0)
     canvas.restoreState()
 
-def inner_background(canvas, doc):
+def inner_bg(canvas, doc):
     canvas.saveState()
     canvas.setFillColor(WHITE)
     canvas.rect(0, 0, W, H, fill=1, stroke=0)
-    # Left gold accent
     canvas.setFillColor(GOLD)
     canvas.rect(0, 0, 0.35*cm, H, fill=1, stroke=0)
-    # Footer line
-    canvas.setStrokeColor(colors.HexColor("#E5E7EB"))
+    canvas.setStrokeColor(MID_GRAY)
     canvas.setLineWidth(0.5)
     canvas.line(2*cm, 1.6*cm, W - 2*cm, 1.6*cm)
-    # Footer text
     canvas.setFont("Helvetica", 7.5)
     canvas.setFillColor(GRAY)
-    canvas.drawString(2*cm, 1.1*cm, "Grupo Financiero BG — Equity Research")
+    canvas.drawString(2*cm, 1.1*cm, "Grupo Financiero BG  —  Equity Research")
     canvas.drawRightString(W - 2*cm, 1.1*cm, f"Confidential  |  {DATE}")
     canvas.restoreState()
 
-# ── Image helper ─────────────────────────────────────────────────────────────
-def chart(filename, width=15*cm, height=8.5*cm):
-    path = os.path.join(IMGS, filename)
-    return Image(path, width=width, height=height)
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def chart(fname, w=15.5*cm, h=8.5*cm):
+    return Image(os.path.join(IMGS, fname), width=w, height=h)
 
-# ── Divider ──────────────────────────────────────────────────────────────────
 def divider():
-    return HRFlowable(width="100%", thickness=0.5,
-                      color=colors.HexColor("#E5E7EB"), spaceAfter=12, spaceBefore=4)
+    return HRFlowable(width="100%", thickness=0.5, color=MID_GRAY, spaceAfter=10, spaceBefore=4)
 
 def gold_rule():
-    return HRFlowable(width=3*cm, thickness=2, color=GOLD, spaceAfter=10, spaceBefore=2)
+    return HRFlowable(width=2.5*cm, thickness=2, color=GOLD, spaceAfter=10, spaceBefore=2)
 
-# ── Build ─────────────────────────────────────────────────────────────────────
-story = []
+def section(label, title):
+    return [
+        Paragraph(label, sec_lbl),
+        Paragraph(title, sec_ttl),
+        gold_rule(),
+        Spacer(1, 0.2*cm),
+    ]
+
+# ── Metrics snapshot box ──────────────────────────────────────────────────────
+def metrics_snapshot():
+    metrics = [
+        ("ROE", ">20%",   "Return on equity"),
+        ("ROA", "~4%",    "Return on assets"),
+        ("AUM Growth", "+20.9%", "Year-over-year"),
+        ("Capital Ratio", "27.2%", "Well above min."),
+        ("Loan/Deposit", "91%",   "Down from 95%"),
+    ]
+    header = [[Paragraph("KEY METRICS SNAPSHOT", S("smh", font="Helvetica-Bold",
+               size=8, color=GOLD, align=TA_CENTER))]]
+    rows   = [[
+        Table([[Paragraph(v, snap_val)], [Paragraph(lbl, snap_lbl)], [Paragraph(sub, val_sub)]],
+              colWidths=[2.8*cm])
+        for lbl, v, sub in metrics
+    ]]
+
+    inner = Table(header + rows, colWidths=[15.5*cm])
+    inner.setStyle(TableStyle([
+        ("BACKGROUND",   (0,0), (-1,0), NAVY),
+        ("TOPPADDING",   (0,0), (-1,0), 8),
+        ("BOTTOMPADDING",(0,0), (-1,0), 8),
+        ("BACKGROUND",   (0,1), (-1,-1), LGRAY),
+        ("TOPPADDING",   (0,1), (-1,-1), 10),
+        ("BOTTOMPADDING",(0,1), (-1,-1), 10),
+        ("BOX",          (0,0), (-1,-1), 1, MID_GRAY),
+        ("LINEBELOW",    (0,0), (-1,0), 0.5, GOLD),
+        ("VALIGN",       (0,0), (-1,-1), "MIDDLE"),
+    ]))
+    return inner
+
+# ── Valuation table ───────────────────────────────────────────────────────────
+def valuation_table():
+    headers = ["Metric", "GFBG (Est.)", "Regional Peers", "Read"]
+    rows = [
+        ["P/B  (Price / Book)", "~2.2x", "1.0x – 1.8x", "Premium — justified by ROE"],
+        ["P/E  (Price / Earnings)", "~12x", "9x – 14x",  "Fairly valued to slight premium"],
+        ["ROE", "20.8%", "8% – 14%",    "Best-in-class"],
+        ["AUM Growth (YoY)", "+20.9%", "+5% – +12%",   "Significantly above peers"],
+    ]
+
+    col_w = [4.2*cm, 3.2*cm, 3.5*cm, 4.6*cm]
+    data  = [headers] + rows
+    t = Table(data, colWidths=col_w)
+    t.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0), (-1,0), NAVY),
+        ("TEXTCOLOR",     (0,0), (-1,0), WHITE),
+        ("FONTNAME",      (0,0), (-1,0), "Helvetica-Bold"),
+        ("FONTSIZE",      (0,0), (-1,0), 9),
+        ("TOPPADDING",    (0,0), (-1,0), 8),
+        ("BOTTOMPADDING", (0,0), (-1,0), 8),
+        ("ALIGN",         (0,0), (-1,0), "CENTER"),
+
+        ("FONTNAME",      (0,1), (-1,-1), "Helvetica"),
+        ("FONTSIZE",      (0,1), (-1,-1), 9),
+        ("TEXTCOLOR",     (0,1), (0,-1), DARK),
+        ("TEXTCOLOR",     (1,1), (-1,-1), GRAY),
+        ("FONTNAME",      (1,1), (1,-1), "Helvetica-Bold"),
+        ("TEXTCOLOR",     (1,1), (1,-1), TEAL),
+        ("ALIGN",         (1,0), (-1,-1), "CENTER"),
+        ("ALIGN",         (-1,1),(-1,-1), "LEFT"),
+
+        ("ROWBACKGROUNDS", (0,1), (-1,-1), [WHITE, LGRAY]),
+        ("TOPPADDING",    (0,1), (-1,-1), 7),
+        ("BOTTOMPADDING", (0,1), (-1,-1), 7),
+        ("LEFTPADDING",   (0,0), (-1,-1), 8),
+        ("BOX",           (0,0), (-1,-1), 0.8, MID_GRAY),
+        ("LINEBELOW",     (0,0), (-1,0),  1,   GOLD),
+        ("INNERGRID",     (0,1), (-1,-1), 0.3, MID_GRAY),
+    ]))
+    return t
 
 # ════════════════════════════════════════════════════════════════════════════
-# PAGE 1 — COVER
+# BUILD
 # ════════════════════════════════════════════════════════════════════════════
 doc = SimpleDocTemplate(
-    OUT,
-    pagesize=A4,
+    OUT, pagesize=A4,
     leftMargin=2.5*cm, rightMargin=2*cm,
     topMargin=0, bottomMargin=3.5*cm,
 )
 
+story = []
+
+# ── PAGE 1: COVER ─────────────────────────────────────────────────────────────
 story += [
-    Spacer(1, 3.8*cm),
-    Paragraph("EQUITY RESEARCH  /  FINANCIAL INSTITUTIONS", cover_tag),
-    Spacer(1, 0.4*cm),
-    Paragraph("Grupo Financiero BG", cover_title),
-    Paragraph("Panama  |  Banking &amp; Asset Management", cover_sub),
-    Spacer(1, 2.2*cm),
-    HRFlowable(width="60%", thickness=0.8, color=GOLD, spaceAfter=16),
-    Paragraph("Prepared by:  Ameth Espinosa — Financial Analyst Jr.", cover_meta),
-    Paragraph(f"Date:  {DATE}", cover_meta),
-    Paragraph("Classification:  Confidential", cover_meta),
+    Spacer(1, 3.6*cm),
+    Paragraph("EQUITY RESEARCH  /  FINANCIAL INSTITUTIONS", cov_tag),
+    Spacer(1, 0.3*cm),
+    Paragraph("Grupo Financiero BG", cov_title),
+    Paragraph("Panama  |  Banking &amp; Asset Management", cov_sub),
+    Spacer(1, 1.6*cm),
+    HRFlowable(width="55%", thickness=0.8, color=GOLD, spaceAfter=14),
+    Spacer(1, 0.2*cm),
+    metrics_snapshot(),
+    Spacer(1, 1.4*cm),
+    HRFlowable(width="55%", thickness=0.5, color=colors.HexColor("#2D4E7A"), spaceAfter=12),
+    Paragraph("Prepared by:  Ameth Espinosa  —  Financial Analyst Jr.", cov_meta),
+    Paragraph(f"Date:  {DATE}", cov_meta),
+    Paragraph("Classification:  Confidential  |  For Institutional Use Only", cov_meta),
     PageBreak(),
 ]
 
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE 2 — INVESTMENT THESIS
-# ════════════════════════════════════════════════════════════════════════════
-story += [
-    Spacer(1, 0.6*cm),
-    Paragraph("01  /  INVESTMENT THESIS", sec_label),
-    Paragraph("Why GFBG is a compelling investment", sec_title),
-    gold_rule(),
-    Spacer(1, 0.3*cm),
+# ── PAGE 2: THESIS + HERO CHART ───────────────────────────────────────────────
+story += section("01  /  INVESTMENT THESIS", "Why GFBG stands out")
 
-    Paragraph("1.  A bank transforming into an asset manager", bullet_head),
-    Paragraph(
-        "AUM grew +37% over two years and is approaching the total size of the bank's balance sheet. "
-        "This structural shift unlocks higher-margin, capital-light revenue — a profile typical of "
-        "top-tier wealth management firms, not traditional banks.",
-        bullet_body),
-
-    Paragraph("2.  Best-in-class profitability — sustained, not cyclical", bullet_head),
-    Paragraph(
-        "GFBG has delivered ROE above 20% for three consecutive years with a cost-to-income ratio "
-        "of 28.1% — among the lowest in the region. This is not a one-time result. It reflects "
-        "disciplined capital allocation and operating leverage built over time.",
-        bullet_body),
-
-    Paragraph("3.  Strong capital position with room to deploy", bullet_head),
-    Paragraph(
-        "A capital ratio of 27.2% — well above regulatory minimums — gives GFBG significant "
-        "flexibility to grow organically or pursue strategic acquisitions without diluting shareholders.",
-        bullet_body),
-
-    Spacer(1, 0.6*cm),
-    divider(),
-
-    Paragraph("02  /  KEY CHARTS", sec_label),
-    Paragraph("The story in four charts", sec_title),
-    gold_rule(),
+thesis = [
+    ("A bank becoming an asset manager",
+     "AUM grew +37% in two years and is nearly the size of the entire balance sheet. "
+     "This shift brings higher margins, less credit risk, and more predictable revenue — "
+     "a business model closer to a wealth manager than a traditional bank."),
+    ("Profitability that holds — year after year",
+     "ROE above 20% for three straight years. A cost-to-income ratio of 28.1% is among "
+     "the best in the region. This is not a one-time result — it is structural."),
+    ("Strong capital with room to grow",
+     "Capital ratio of 27.2% — well above what regulators require. "
+     "The bank can grow, acquire, or return capital to shareholders without strain."),
 ]
+for h, b in thesis:
+    story += [Paragraph(f"‣  {h}", b_head), Paragraph(b, b_body)]
 
-# Chart 1 — AUM vs Loans vs Assets (the hero chart)
 story += [
-    Spacer(1, 0.3*cm),
-    chart("07_aum_vs_loans_vs_assets.png", width=16*cm, height=9*cm),
+    Spacer(1, 0.3*cm), divider(),
+    *section("02  /  KEY CHARTS", "The story in numbers"),
+    chart("07_aum_vs_loans_vs_assets.png", w=15.5*cm, h=8.8*cm),
     Paragraph(
-        "AUM is growing 3x faster than loans. By 2025, managed assets nearly equal the bank's entire balance sheet.",
+        "Managed money (AUM) is growing 3x faster than loans. "
+        "By 2025, AUM nearly equals the bank's total assets — a structural shift in the business.",
         caption),
+    PageBreak(),
 ]
 
-story.append(PageBreak())
-
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE 3 — CHARTS (ROE + ROA)
-# ════════════════════════════════════════════════════════════════════════════
-story += [
-    Spacer(1, 0.6*cm),
-    Paragraph("02  /  KEY CHARTS (cont.)", sec_label),
-    Spacer(1, 0.2*cm),
-]
-
-# ROE + ROA side by side via table
-roe_img = chart("05_roe.png", width=7.8*cm, height=5.2*cm)
-roa_img = chart("06_roa.png", width=7.8*cm, height=5.2*cm)
-
-chart_table = Table(
-    [[roe_img, roa_img]],
-    colWidths=[8.1*cm, 8.1*cm],
-)
-chart_table.setStyle(TableStyle([("VALIGN", (0,0), (-1,-1), "TOP")]))
-story.append(chart_table)
-
-cap_table = Table(
-    [[Paragraph("ROE held above 20% — three years in a row.", caption),
-      Paragraph("ROA nearly 3x the sector average, consistently.", caption)]],
-    colWidths=[8.1*cm, 8.1*cm],
-)
-story.append(cap_table)
-
+# ── PAGE 3: ROE / ROA / AUM CHARTS ───────────────────────────────────────────
 story += [
     Spacer(1, 0.5*cm),
-    chart("04_aum.png", width=16*cm, height=7*cm),
-    Paragraph("AUM compound growth of +20.9% year-over-year — the fastest-growing segment in the business.", caption),
-    Spacer(1, 0.4*cm),
-    divider(),
+    *section("02  /  KEY CHARTS (cont.)", ""),
 ]
 
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE 4 — KEY INSIGHTS + RISKS + CONCLUSION
-# ════════════════════════════════════════════════════════════════════════════
-story.append(PageBreak())
+roe_img = chart("05_roe.png",  w=7.6*cm, h=5.2*cm)
+roa_img = chart("06_roa.png",  w=7.6*cm, h=5.2*cm)
+side = Table([[roe_img, roa_img]], colWidths=[8*cm, 8*cm])
+side.setStyle(TableStyle([("VALIGN", (0,0), (-1,-1), "TOP")]))
+story.append(side)
+
+cap = Table(
+    [[Paragraph("ROE above 20% — held for three consecutive years.", caption),
+      Paragraph("ROA at 4% — nearly 3x the regional banking average.", caption)]],
+    colWidths=[8*cm, 8*cm])
+story.append(cap)
 
 story += [
-    Spacer(1, 0.6*cm),
-    Paragraph("03  /  KEY INSIGHTS", sec_label),
-    Paragraph("What the numbers tell us", sec_title),
-    gold_rule(),
-    Spacer(1, 0.2*cm),
+    Spacer(1, 0.3*cm),
+    chart("04_aum.png", w=15.5*cm, h=6.8*cm),
+    Paragraph(
+        "AUM grew from $14.4B to $19.9B in two years — the fastest-growing segment in the business.",
+        caption),
+    Spacer(1, 0.3*cm),
+    divider(),
+    PageBreak(),
 ]
+
+# ── PAGE 4: INSIGHTS + VALUATION ─────────────────────────────────────────────
+story += section("03  /  KEY INSIGHTS", "What the numbers tell us")
 
 insights = [
-    ("AUM dominance",
-     "Managed assets reached $19.9B in 2025 — 94% of total balance sheet. "
-     "GFBG is functionally converging with an asset manager."),
-    ("ROE above 20% — three years straight",
-     "Sustained profitability at this level is rare globally. "
-     "It signals structural advantage, not a cyclical event."),
-    ("Loan-to-Deposit ratio declining",
-     "Down from 95% to 91%. The bank is becoming less reliant on credit "
-     "and more focused on fee-based income — lower risk, more scalable."),
-    ("Capital ratio of 27.2%",
-     "Well above Basel III minimums. Strong buffer against credit losses "
-     "and capacity to fund future growth without dilution."),
+    ("AUM is approaching the size of the whole bank",
+     "At $19.9B, managed assets are now 94% of total assets. "
+     "In 2023 that number was 76%. The shift is fast and consistent."),
+    ("ROE above 20% — three years in a row",
+     "Most banks globally earn 10-12% ROE. GFBG earns double. "
+     "That gap reflects a better business mix and tighter cost control."),
+    ("The bank is lending less relative to deposits",
+     "Loan-to-deposit ratio fell from 95% to 91%. "
+     "Less reliance on credit means lower risk and more room for fee income."),
+    ("Capital buffer is very strong",
+     "At 27.2%, the capital ratio gives the bank flexibility to invest, "
+     "expand, or absorb shocks — without needing to raise money from investors."),
 ]
-
-for head, detail in insights:
-    story.append(Paragraph(f"‣  {head}", bullet_head))
-    story.append(Paragraph(detail, bullet_body))
+for h, b in insights:
+    story += [Paragraph(f"‣  {h}", b_head), Paragraph(b, b_body)]
 
 story += [
-    Spacer(1, 0.4*cm),
+    Spacer(1, 0.2*cm), divider(),
+    *section("04  /  VALUATION", "Is the stock cheap or expensive?"),
+    Paragraph(
+        "Based on publicly available data and regional comparables, GFBG trades at a modest premium to peers. "
+        "Given its superior ROE and AUM growth, that premium is justified.",
+        S("vb", size=9.5, color=GRAY, leading=15, after=10)),
+    valuation_table(),
+    Spacer(1, 0.3*cm),
+    Paragraph(
+        "A P/B of ~2.2x is above the regional average, but GFBG's ROE is also nearly double the peer median. "
+        "High-ROE banks historically command a premium. At current levels, the valuation reflects quality — "
+        "not speculation.",
+        S("vi", font="Helvetica-Oblique", size=9, color=GRAY, leading=14, after=0, left=8)),
+    Spacer(1, 0.3*cm),
     divider(),
-    Spacer(1, 0.2*cm),
-    Paragraph("04  /  RISK FACTORS", sec_label),
-    Paragraph("What to watch", sec_title),
-    gold_rule(),
-    Spacer(1, 0.2*cm),
+    PageBreak(),
+]
+
+# ── PAGE 5: CATALYSTS + RISKS + CONCLUSION ───────────────────────────────────
+story += section("05  /  CATALYSTS", "What could drive the stock higher")
+
+catalysts = [
+    ("AUM growth accelerates fee income",
+     "Each dollar of new AUM generates management fees with no credit risk attached. "
+     "As AUM approaches and exceeds the loan book, fee income becomes the dominant revenue driver."),
+    ("Business mix shift improves margins",
+     "Moving from interest income (spread-dependent) to fee income (volume-dependent) "
+     "structurally improves net margins and reduces sensitivity to interest rate cycles."),
+    ("Expansion of wealth management services",
+     "GFBG has the client base and brand to deepen penetration in private banking and "
+     "family office services — both high-margin segments with strong regional demand."),
+    ("Capital deployment: M&A or regional expansion",
+     "With a 27.2% capital ratio, the bank has dry powder. A strategic acquisition or "
+     "geographic expansion into neighboring markets would accelerate growth without dilution."),
+]
+for h, b in catalysts:
+    story += [Paragraph(f"+ {h}", cat_h), Paragraph(b, cat_b)]
+
+story += [
+    divider(),
+    *section("06  /  RISKS", "What could go wrong"),
 ]
 
 risks = [
-    ("NPL coverage declining  (152.6% → 124.3%)",
-     "Not critical at current levels, but the trend warrants monitoring. "
-     "A sustained drop below 100% would signal asset quality deterioration."),
-    ("AUM growth sustainability",
-     "A +20.9% YoY AUM growth rate is exceptional — and hard to maintain. "
-     "Slowing AUM growth would compress fee revenue and re-rate the stock."),
-    ("Panama macro concentration",
-     "The business is geographically concentrated. Any Panama-specific "
-     "shock — fiscal, regulatory, or political — flows directly into results."),
+    ("NPL coverage is declining  (152.6% -> 124.3%)",
+     "The bank is setting aside less money to cover potential loan losses. "
+     "Not a problem today, but worth monitoring. A drop below 100% would be a red flag."),
+    ("AUM growth may slow",
+     "Growing AUM at +20.9% per year is hard to sustain indefinitely. "
+     "If growth slows significantly, fee revenue projections come down and the stock re-rates."),
+    ("Panama concentration risk",
+     "Almost all revenue comes from Panama. A local recession, political instability, "
+     "or regulatory change would hit the bank directly with no geographic buffer."),
 ]
-
-for head, detail in risks:
-    story.append(Paragraph(f"⚠  {head}", risk_head))
-    story.append(Paragraph(detail, risk_body))
+for h, b in risks:
+    story += [Paragraph(f"! {h}", risk_h), Paragraph(b, risk_b)]
 
 story += [
     divider(),
-    Spacer(1, 0.3*cm),
-    Paragraph("05  /  CONCLUSION", sec_label),
-    Spacer(1, 0.5*cm),
+    *section("07  /  CONCLUSION", "Our view"),
 ]
 
 # Rating box
-rating_data = [[Paragraph("OUTPERFORM", rating_txt)]]
-rating_box  = Table(rating_data, colWidths=[16*cm])
-rating_box.setStyle(TableStyle([
-    ("BACKGROUND",  (0,0), (-1,-1), colors.HexColor("#F0F9FF")),
-    ("ROUNDEDCORNERS", [6]),
-    ("BOX",         (0,0), (-1,-1), 1.5, TEAL),
-    ("TOPPADDING",  (0,0), (-1,-1), 16),
-    ("BOTTOMPADDING",(0,0),(-1,-1), 16),
+r_box = Table([[Paragraph("OUTPERFORM", rating_s)]], colWidths=[15.5*cm])
+r_box.setStyle(TableStyle([
+    ("BACKGROUND",   (0,0), (-1,-1), TEAL_LIGHT),
+    ("BOX",          (0,0), (-1,-1), 1.5, TEAL),
+    ("TOPPADDING",   (0,0), (-1,-1), 14),
+    ("BOTTOMPADDING",(0,0), (-1,-1), 14),
 ]))
-story.append(rating_box)
+story.append(r_box)
 story += [
     Spacer(1, 0.5*cm),
     Paragraph(
-        "GFBG is a rare combination: a highly profitable bank actively transitioning "
-        "into an asset management platform. With ROE above 20%, AUM growing at nearly "
-        "21% per year, and a capital ratio that provides ample runway — the risk/reward "
-        "profile favors long-term investors with a 2-3 year horizon.",
-        concl_body),
-    Spacer(1, 1.2*cm),
-    HRFlowable(width="40%", thickness=0.8, color=GOLD, spaceAfter=8),
-    Paragraph("Ameth Espinosa  —  Financial Analyst Jr.", footer_s),
-    Paragraph(f"Grupo Financiero BG Equity Research  |  {DATE}", footer_s),
+        "GFBG is one of the most profitable banks in the region — and it is actively transforming "
+        "into something more valuable: an asset management platform with a banking license. "
+        "With ROE above 20%, AUM growing at nearly 21% per year, and a capital ratio that provides "
+        "real strategic flexibility, the risk/reward profile is compelling. "
+        "We see the primary drivers over a 2-3 year horizon as continued AUM expansion, "
+        "margin improvement from the fee/spread revenue mix shift, and disciplined capital deployment. "
+        "Maintain OUTPERFORM.",
+        concl_s),
+    Spacer(1, 1*cm),
+    HRFlowable(width="35%", thickness=0.8, color=GOLD, spaceAfter=8),
+    Paragraph("Ameth Espinosa  —  Financial Analyst Jr.", foot_s),
+    Paragraph(f"Grupo Financiero BG  |  Equity Research  |  {DATE}", foot_s),
+    Paragraph("This report is for informational purposes only and does not constitute investment advice.", foot_s),
 ]
 
-# ── Render ───────────────────────────────────────────────────────────────────
-page_fns = [cover_background, inner_background, inner_background, inner_background]
-
-def on_page(canvas, doc):
-    n = doc.page
-    fn = page_fns[n - 1] if n <= len(page_fns) else inner_background
-    fn(canvas, doc)
-
-doc.build(story, onFirstPage=cover_background, onLaterPages=inner_background)
+# ── Render ────────────────────────────────────────────────────────────────────
+doc.build(story, onFirstPage=cover_bg, onLaterPages=inner_bg)
 print(f"PDF generated -> {OUT}")

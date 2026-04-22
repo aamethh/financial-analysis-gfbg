@@ -1,42 +1,77 @@
-# Grupo Financiero BG — Financial Analysis
+# Grupo Financiero BG — Equity Research & Financial Analysis
 
-This project presents a financial analysis of Grupo Financiero BG (Panama), structured from a hedge fund-style perspective.
+> **Coverage:** Grupo Financiero BG (Panama) | **Status:** `ACTIVE` | **Cycle:** Q1 2026
 
-## Key Insight
+---
 
-Rather than analyzing GFBG as a traditional bank, this study approaches it as a capital allocation platform with integrated asset management capabilities.
-
-## Key Metrics
-
-- ROAE: 21.2%  
-- Efficiency ratio: 28.1%  
-- Capital ratio: 27.2%  
-- Total assets: ~$21B  
-- AUM growth: +20.9%  
 ## Investment Thesis
 
-Grupo Financiero BG is evolving from a traditional banking model toward a capital allocation and asset management platform, supported by strong profitability (ROAE >20%) and accelerating AUM growth.
+GFBG is not a traditional bank — it is a **capital allocation platform** with integrated asset management capabilities. Supported by best-in-class efficiency (28.1% cost-to-income) and sustained ROAE above 20%, the institution is undergoing a structural shift toward fee-based, AUM-driven revenue.
 
-## Recommendation
+**Rating: BUY / HOLD** *(risk-adjusted)*
 
-HOLD / BUY (based on risk appetite)
+---
 
-The bank shows strong fundamentals, but monitoring asset quality and sustainability of growth is key.
-## Key Observation
+## Key Metrics at a Glance
 
-AUM is growing faster than the loan book, suggesting a structural shift toward an asset management-driven model.
+| Metric | Value |
+|---|---|
+| ROAE | 21.2% |
+| Efficiency Ratio | 28.1% |
+| Capital Ratio | 27.2% |
+| Total Assets | ~$21B |
+| AUM Growth (YoY) | +20.9% |
+| NPL Coverage | 124.3% *(↓ from 152.6%)* |
 
-## Risk Highlight
+---
 
-Declining NPL coverage (152.6% → 124.3%) — not critical, but relevant to monitor.
+## Key Observations
 
-## Project Structure
+- AUM growing faster than the loan book — structural shift toward asset management
+- Capital ratio at 27.2% signals strong buffer well above regulatory minimums
+- NPL coverage declining: not critical, but a metric to monitor closely
+- Efficiency ratio of 28.1% is elite by regional banking standards
 
-- `/data` → financial dataset  
-- `/report` → investment memo  
-- `/visuals` → charts and dashboard  
+---
+
+## Risk Factors
+
+| Risk | Severity |
+|---|---|
+| Declining NPL coverage | Medium |
+| AUM growth sustainability | Medium |
+| Panama macro exposure | Low–Medium |
+| Interest rate sensitivity | Low |
+
+---
+
+## Repository Structure
+
+```
+financial-analysis-gfbg/
+├── data/            # Raw financial dataset (do not modify)
+├── analysis/        # Python scripts and Jupyter notebooks
+├── outputs/         # Charts, tables, export-ready reports
+└── model/           # Valuation and forecast models
+```
+
+---
+
+## Dataset
+
+| File | Description |
+|---|---|
+| `data/gfbg_dataset.xlsx` | Core financials — balance sheet, P&L, key ratios |
+
+---
+
+## Stack
+
+- Python 3.11 · pandas · openpyxl · matplotlib · seaborn
+- Excel for executive-ready outputs
+
+---
 
 ## Author
 
-Ameth Espinosa  
-Financial Analyst Jr
+**Ameth Espinosa** — Financial Analyst Jr.
